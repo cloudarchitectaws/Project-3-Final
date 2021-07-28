@@ -43,8 +43,11 @@ jobs:
       - run:
           name: Build front-end
           command: |
-            # Your code here
-            exit 1
+            cd ./frontend
+            echo "INSTALLING NPM MODULE DEPENDENCIES"
+            npm i
+            echo "BUILDING THE FRONTEND APPLICATION"
+            npm run build
       - save_cache:
           paths: [frontend/node_modules]
           key: frontend-build
@@ -59,8 +62,11 @@ jobs:
       - run:
           name: Back-end build
           command: |
-             # Your code here
-             exit 1
+            cd ./backend
+            echo "INSTALLING NPM MODULE DEPENDENCIES"
+            npm i
+            echo "BUILDING THE BACKEND APPLICATION"
+            npm run build
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build
