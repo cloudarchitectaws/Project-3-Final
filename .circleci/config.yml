@@ -119,7 +119,8 @@ jobs:
             npm i
 
             echo "RUNNING FRONTEND SECURITY VULNERABILITY SCAN"
-            npm audit fix --audit-level=critical
+            npm audit --audit-level=critical > audit.log
+            tail audit.log -n 200
       
   scan-backend:
     docker:
@@ -136,7 +137,8 @@ jobs:
             npm i
 
             echo "RUNNING BACKEND SECURITY VULNERABILITY SCAN"
-            npm audit fix --audit-level=critical
+            npm audit --audit-level=critical > audit.log
+            tail audit.log -n 200
   deploy-infrastructure:
     docker:
       - image: amazon/aws-cli
