@@ -110,6 +110,8 @@ jobs:
     steps:
       - checkout
    
+      - restore_cache:
+          keys: [frontend-build]
       - run:
           name: Analyse front-end
           command: |
@@ -119,7 +121,7 @@ jobs:
             npm i
 
             echo "RUNNING FRONTEND SECURITY VULNERABILITY SCAN"
-            npm audit --audit-level=critical --force
+            npm audit fix --audit-level=critical --force
             
       
   scan-backend:
@@ -128,16 +130,18 @@ jobs:
     steps:
       - checkout
   
+      - restore_cache:
+          keys: [frontend-build]
       - run:
-          name: Analyse back-end
+          name: Analyse front-end
           command: |
-            cd ./backend
+            cd ./frontend
 
             echo "INSTALL NODE_MODULE DEPENDENCIES"
             npm i
 
-            echo "RUNNING BACKEND SECURITY VULNERABILITY SCAN"
-            npm audit --audit-level=critical --force
+            echo "RUNNING FRONTEND SECURITY VULNERABILITY SCAN"
+            npm audit fix --audit-level=critical --force
           
   deploy-infrastructure:
     docker:
