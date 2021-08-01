@@ -189,13 +189,25 @@ jobs:
           name: Add back-end ip to ansible inventory
           command: |
             
-            yum install tar -y
-            yum install gzip -y 
-            BACKEND_IP=$(curl -H "token: ${CIRCLE_WORKFLOW_ID:0:7}" --request GET https://api.memstash.io/values/backendip)
-            cd .circleci/ansible/
-            echo "[web]" > ./inventory.txt
-            echo ${BACKEND_IP} >> ./inventory.txt
-            cat ./inventory.txt
+            echo "RETRIEVING THE IP ADDRESS OF THE BACKEND EC2 INSTANCE"
+            workflowidip=$(echo "aws ec2 describe-instances --filters 'Name=tag:project,Values=udapeople-backend_${CIRCLE_WORKFLOW_ID:0:7}' \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' --output text")
+            echo $workflowidip > backendip.sh; chmod 755 backendip.sh
+            echo "POPULATING ANSIBLE INVENTORY FOR FUTURE SERVER CONFIGURATIONS STEPS"
+            ./backendip.sh >> .circleci/ansible/inventory.txt
+            backendip=$(./backendip.sh)
+            echo "STORING THE IP ADDRESS OF THE BACKEND EC2 INSTANCE IN MEMSTASH FOR LATER USE"
+            curl -H "Content-Type: text/plain" -H "token: 50ff33d6-1f33-4917-9dff-ca0f975d83db" --request PUT --data "$backendip" \
+              https://api.memstash.io/values/backendip_${CIRCLE_WORKFLOW_ID:0:7}
+            
+            echo "RETRIEVING THE PUBLIC DNS NAME OF THE BACKEND EC2 INSTANCE"
+            workflowiddns=$(echo "aws ec2 describe-instances --filters 'Name=tag:project,Values="udapeople-backend_${CIRCLE_WORKFLOW_ID:0:7}"' \
+              --query 'Reservations[*].Instances[*].PublicDnsName' --output text")
+            echo $workflowiddns > backenddns.sh; chmod 755 backenddns.sh
+            backenddnsurl=$(./backenddns.sh)
+            echo "STORING THE PUBLIC DNS NAME OF THE BACKEND EC2 INSTANCE IN MEMSTASH FOR LATER USE"
+            curl -H "Content-Type: text/plain" -H "token: 50ff33d6-1f33-4917-9dff-ca0f975d83db" --request PUT --data "$backenddnsurl" \
+              https://api.memstash.io/values/url_${CIRCLE_WORKFLOW_ID:0:7}
       - persist_to_workspace:
           root: ~/
           paths:
@@ -232,13 +244,41 @@ jobs:
       - run:
           name: Run migrations
           command: |
-            # Your code here
-            exit 1
+            echo "BUILDING THE BACKEND ENVIRONMENT FILE FOR POSTGRES MIGRATIONS"
+            echo ENVIROMENT=production > .env
+            echo TYPEORM_CONNECTION=postgres >> .env
+            echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> .env
+            echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> .env
+            echo TYPEORM_MIGRATIONS=./src/migrations/*.ts >> .env
+            echo TYPEORM_HOST=$TYPEORM_HOST >> .env
+            echo TYPEORM_PORT=$TYPEORM_PORT >> .env
+            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> .env
+            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> .env
+            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> .env
+
+            echo "INSTALLING NPM MODULE DEPENDENCIES"
+            npm i > npminstall.log
+
+            echo "INSTALLING OATH-SIGN PACKAGE"
+            npm install oauth-sign >> npminstall.log
+
+            echo "RUNNING POSTGRES DATABASE MIGRATIONS"
+            npm run migrations > migration.log
+            cat migration.log
       - run:
           name: Send migration results to memstash
           command: |
-            # Your code here
-            exit 1
+            if [[ $(grep -i "has been executed successfully" migration.log | wc -l) -ge 1 ]]; then
+                echo "has been executed successfully EXECUTED THE DATABASE MIGRATIONS"
+                curl -H "Content-Type: text/plain" -H "token: 50ff33d6-1f33-4917-9dff-ca0f975d83db" --request PUT \
+                  --data "Migration successful" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID:0:7}
+              else
+                echo "FAILED TO RUN THE DATABASE MIGRATIONS"
+                curl -H "Content-Type: text/plain" -H "token: 50ff33d6-1f33-4917-9dff-ca0f975d83db" --request PUT \
+                  --data "Migration failed" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID:0:7}
+              fi
+              echo "STORING THE RESULTS OF THE DATABASE MIGRATIONS IN MEMSTASH FOR LATER EVALUATION"
+      - destroy-environment
      # Here's where you will add some code to rollback on failure      
 
   deploy-frontend:
