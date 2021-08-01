@@ -152,7 +152,7 @@ jobs:
           name: CDN stack
           command: |
             aws cloudformation deploy \
-              --template-file .circleci\files\cloudfront.yml \
+              --template-file .circleci/files/cloudfront.yml \
               --stack-name production-distro --region ap-south-1 \
               --parameter-overrides WorkflowID=jkhkdajshkljbl  --tags project=udapeople &
       - run:
