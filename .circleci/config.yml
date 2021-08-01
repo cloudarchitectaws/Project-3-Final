@@ -243,6 +243,7 @@ jobs:
       # Checkout code from git
       - run:
           name: Run migrations
+          working_directory: ./backend
           command: |
             echo ENVIRONMENT=production > "backend/.env"
             echo TYPEORM_CONNECTION=$TYPEORM_CONNECTION >> "backend/.env"
