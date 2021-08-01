@@ -210,6 +210,8 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - 11:f8:00:99:22:99:cb:d0:94:80:a0:1a:1f:55:17:19
+      - attach_workspace:
+          at: /tmp      
       - run:
           name: Install dependencies
           command: |
@@ -218,7 +220,7 @@ jobs:
       - run:
           name: Configure server
           command: |
-            ansible-playbook -i project/.circleci/ansible/inventory.txt .circleci/ansible/configure-server.yml
+            ansible-playbook -i /tmp/ansible/inventory.txt  .circleci/ansible/configure-server.yml
       - destroy-environment
       # Here's where you will add some code to rollback on failure      
 
