@@ -213,7 +213,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            ommand: |
+            
             apk add --update ansible
       - run:
           name: Configure server
