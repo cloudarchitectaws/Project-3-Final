@@ -256,7 +256,9 @@ jobs:
             echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> .env
             echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> .env
             echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> .env
-
+            echo ~/project/backend/.env
+            pwd
+            cat ~/project/backend/.env 
             echo "INSTALLING NPM MODULE DEPENDENCIES"
             npm i > npminstall.log
 
@@ -265,6 +267,7 @@ jobs:
 
             echo "RUNNING POSTGRES DATABASE MIGRATIONS"
             npm run migrations > migration.log
+            
       - run:
           name: Send migration results to memstash
           command: |
