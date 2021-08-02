@@ -267,6 +267,7 @@ jobs:
 
             echo "RUNNING POSTGRES DATABASE MIGRATIONS"
             npm run migrations > migration.log
+            cat migration.log
             
       - run:
           name: Send migration results to memstash
