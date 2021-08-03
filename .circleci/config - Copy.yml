@@ -163,7 +163,19 @@ jobs:
               --tags project=udapeople-backend_${CIRCLE_WORKFLOW_ID:0:7} \
               --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
-      
+      - run:
+          name: Store Backend URL in Memstash
+          command: |
+            BACKEND_IP=$(aws ec2 describe-instances \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --output text)
+            echo "BACKEND IP:"
+            echo ${BACKEND_IP}
+            curl -H "Content-Type: text/plain" \
+               -H "token: ${CIRCLE_WORKFLOW_ID:0:7}" \
+               --request PUT \
+               --data ${BACKEND_IP} https://api.memstash.io/values/backendip
       - run:
           name: Ensure front-end infrastructure exist
           command: |
@@ -196,10 +208,9 @@ jobs:
             curl -H "Content-Type: text/plain" -H "token: 50ff33d6-1f33-4917-9dff-ca0f975d83db" --request PUT --data "$backenddnsurl" \
               https://api.memstash.io/values/url_${CIRCLE_WORKFLOW_ID:0:7}
       - persist_to_workspace:
-          root: .circleci
+          root: ~/
           paths:
-            - ansible/inventory.txt
-      - destroy-environment
+            - project/.circleci/ansible/inventory.txt
       # Here's where you will add some code to rollback on failure      
 
   configure-infrastructure:
@@ -316,7 +327,6 @@ jobs:
             bucketurl="$(echo "http://$bucket.s3-website-us-west-2.amazonaws.com")"
             curl -H "Content-Type: text/plain" -H "token: 50ff33d6-1f33-4917-9dff-ca0f975d83db" --request PUT --data "$bucketurl" https://api.memstash.io/values/bucketurl
       - destroy-environment
-          
        
                     
   deploy-backend:
