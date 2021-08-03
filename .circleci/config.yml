@@ -220,6 +220,7 @@ jobs:
       - run:
           name: Configure server
           command: |
+            cat  /tmp/ansible/inventory.txt 
             ansible-playbook -i /tmp/ansible/inventory.txt  .circleci/ansible/configure-server.yml
       - destroy-environment
       # Here's where you will add some code to rollback on failure      
@@ -360,23 +361,37 @@ jobs:
     docker:
       - image: circleci/node:13.8.0 
     steps:
-      # Checkout code from git
+      - checkout
       - run:
           name: Install dependencies
           command: |
-            # your code here
-      - run:
-          name: Get backend url
-          command: |
-            # your code here
+            sudo apt-get update
+            sudo apt-get upgrade
+            sudo apt-get -y install less curl
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
       - run:
           name: Backend smoke test.
           command: |
-            # your code here
+            echo "RUNNING A BACKEND SMOKE TEST"
+            BACKEND_URL="http://$(curl -H "token: c1b1e3ca-9ad3-4e51-a6ba-8693a7450b4e" --request GET \
+              https://api.memstash.io/values/backendip_${CIRCLE_WORKFLOW_ID:0:7} | head -1):3030"
+            curl "$BACKEND_URL/api/status"
       - run:
           name: Frontend smoke test.
           command: |
-            # your code here
+            echo "RUNNING A FRONTEND SMOKE TEST"
+            export bucketurl=$(curl -H "token: c1b1e3ca-9ad3-4e51-a6ba-8693a7450b4e" --request GET https://api.memstash.io/values/bucketurl)
+            if curl -s ${bucketurl} | grep "Welcome"
+            then
+              echo "FRONTEND SMOKE TEST SUCCESS"
+            else
+              echo "FRONTEND SMOKE TEST FAIL"
+              exit 1
+            fi
+      - destroy-environment
+      - revert-migrations
       # Here's where you will add some code to rollback on failure  
 
   cloudfront-update:
