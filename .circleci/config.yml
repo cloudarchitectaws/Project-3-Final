@@ -273,6 +273,7 @@ jobs:
             
       - run:
           name: Send migration results to memstash
+          working_directory: ./backend
           command: |
             if [[ $(grep -i "has been executed successfully" migration.log | wc -l) -ge 1 ]]; then
                 echo "has been executed successfully EXECUTED THE DATABASE MIGRATIONS"
