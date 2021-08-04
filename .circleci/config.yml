@@ -51,7 +51,7 @@ jobs:
           key: frontend-build
       - slack/notify:
           event: fail
-          channel: T02A401MJRK
+          channel: C02AKKVMW5P
           template: basic_fail_1
 
   build-backend:
@@ -72,7 +72,7 @@ jobs:
           key: backend-build
       - slack/notify:
           event: fail
-          channel: T02A401MJRK
+          channel: C02AKKVMW5P
           template: basic_fail_1
 
   test-frontend:
@@ -90,7 +90,7 @@ jobs:
             npm run test
       - slack/notify:
           event: fail
-          channel: T02A401MJRK
+          channel: C02AKKVMW5P
           template: basic_fail_1
                 
   test-backend:
@@ -108,7 +108,7 @@ jobs:
              npm run test
       - slack/notify:
           event: fail
-          channel: T02A401MJRK
+          channel: C02AKKVMW5P
           template: basic_fail_1
              
   scan-frontend:
@@ -126,7 +126,7 @@ jobs:
             npm audit fix --audit-level=critical --force
       - slack/notify:
           event: fail
-          channel: T02A401MJRK
+          channel: C02AKKVMW5P
           template: basic_fail_1
 
   scan-backend:
@@ -144,7 +144,7 @@ jobs:
              npm audit fix --audit-level=critical --force
       - slack/notify:
           event: fail
-          channel: T02A401MJRK
+          channel: C02AKKVMW5P
           template: basic_fail_1
           
   deploy-infrastructure:
