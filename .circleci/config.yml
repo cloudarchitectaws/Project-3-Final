@@ -234,6 +234,8 @@ jobs:
             echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"
             echo ~/project/backend/.env
             cd ~/project/.circleci/ansible
+            export ANSIBLE_HOST_KEY_CHECKING=False
+            cat inventory.txt
             ansible-playbook -i inventory.txt configure-server.yml
             pwd
             cat ~/project/backend/.env
