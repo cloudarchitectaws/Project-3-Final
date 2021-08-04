@@ -1,4 +1,7 @@
 version: 2.1
+defaults2: &defaults2
+  docker:
+      - image: python:3.7-alpine3.11
 
 commands:
   destroy-environment:
@@ -205,20 +208,21 @@ jobs:
       # Here's where you will add some code to rollback on failure      
 
   configure-infrastructure:
-    docker:
-      - image: python:3.7-alpine3.12
+    <<: *defaults2
+    
     steps:
       - checkout
       - add_ssh_keys:
           fingerprints:
             - 11:f8:00:99:22:99:cb:d0:94:80:a0:1a:1f:55:17:19
       - attach_workspace:
-          at: /tmp      
+          at:  ~/project   
       - run:
           name: Install dependencies
           command: |
-            
             apk add --update ansible
+            apk add openssh-client
+            pip install awscli
       - run:
           name: Configure server
           command: |
