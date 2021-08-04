@@ -156,9 +156,13 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install dependencies
+          name: CDN stack
           command: |
-            yum install -y tar gzip
+            aws cloudformation deploy --template-file .circleci/files/cloudfront.yml --stack-name production-distro --region ap-south-1 --parameter-overrides WorkflowID=jkhkdajshkljbl --tags project=udapeople &
+      - run:
+          name: Install tar/gzip utility
+          command: |
+            yum -y install tar gzip curl
       - run:
           name: Ensure back-end infrastructure exists
           command: |
@@ -167,6 +171,19 @@ jobs:
               --tags project=udapeople-backend_${CIRCLE_WORKFLOW_ID:0:7} \
               --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
+      - run:
+          name: Store Backend URL in Memstash
+          command: |
+            BACKEND_IP=$(aws ec2 describe-instances \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --output text)
+            echo "BACKEND IP:"
+            echo ${BACKEND_IP}
+            curl -H "Content-Type: text/plain" \
+               -H "token: ${CIRCLE_WORKFLOW_ID:0:7}" \
+               --request PUT \
+               --data ${BACKEND_IP} https://api.memstash.io/values/backendip
       - run:
           name: Ensure front-end infrastructure exist
           command: |
@@ -178,6 +195,7 @@ jobs:
       - run:
           name: Add back-end ip to ansible inventory
           command: |
+            
             echo "RETRIEVING THE IP ADDRESS OF THE BACKEND EC2 INSTANCE"
             workflowidip=$(echo "aws ec2 describe-instances --filters 'Name=tag:project,Values=udapeople-backend_${CIRCLE_WORKFLOW_ID:0:7}' \
               --query 'Reservations[*].Instances[*].PublicIpAddress' --output text")
@@ -198,10 +216,9 @@ jobs:
             curl -H "Content-Type: text/plain" -H "token: 50ff33d6-1f33-4917-9dff-ca0f975d83db" --request PUT --data "$backenddnsurl" \
               https://api.memstash.io/values/url_${CIRCLE_WORKFLOW_ID:0:7}
       - persist_to_workspace:
-          root: .circleci
+          root: ~/
           paths:
-            - ansible/inventory.txt
-      - destroy-environment
+            - project/.circleci/ansible/inventory.txt
       # Here's where you will add some code to rollback on failure      
 
   configure-infrastructure:
