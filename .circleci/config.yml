@@ -141,7 +141,15 @@ jobs:
 
             echo "RUNNING FRONTEND SECURITY VULNERABILITY SCAN"
             npm audit fix --audit-level=critical --force
-          
+  deploy-CDN:
+    docker:
+       - image: amazon/aws-cli          
+    steps:
+       - run:
+          name: CDN stack
+          command: |
+            aws cloudformation deploy --template-file .circleci/files/cloudfront.yml --stack-name production-distro --region ap-south-1 --parameter-overrides WorkflowID=jkhkdajshkljbl --tags project=udapeople &
+      
   deploy-infrastructure:
     docker:
       - image: amazon/aws-cli
@@ -163,7 +171,19 @@ jobs:
               --tags project=udapeople-backend_${CIRCLE_WORKFLOW_ID:0:7} \
               --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
-      
+      - run:
+          name: Store Backend URL in Memstash
+          command: |
+            BACKEND_IP=$(aws ec2 describe-instances \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --output text)
+            echo "BACKEND IP:"
+            echo ${BACKEND_IP}
+            curl -H "Content-Type: text/plain" \
+               -H "token: ${CIRCLE_WORKFLOW_ID:0:7}" \
+               --request PUT \
+               --data ${BACKEND_IP} https://api.memstash.io/values/backendip
       - run:
           name: Ensure front-end infrastructure exist
           command: |
@@ -196,10 +216,9 @@ jobs:
             curl -H "Content-Type: text/plain" -H "token: 50ff33d6-1f33-4917-9dff-ca0f975d83db" --request PUT --data "$backenddnsurl" \
               https://api.memstash.io/values/url_${CIRCLE_WORKFLOW_ID:0:7}
       - persist_to_workspace:
-          root: .circleci
+          root: ~/
           paths:
-            - ansible/inventory.txt
-      - destroy-environment
+            - project/.circleci/ansible/inventory.txt
       # Here's where you will add some code to rollback on failure      
 
   configure-infrastructure:
@@ -220,8 +239,6 @@ jobs:
       - run:
           name: Configure server
           command: |
-            export ANSIBLE_HOST_KEY_CHECKING=False
-            cat  /tmp/ansible/inventory.txt 
             ansible-playbook -i /tmp/ansible/inventory.txt  .circleci/ansible/configure-server.yml
       - destroy-environment
       # Here's where you will add some code to rollback on failure      
@@ -318,7 +335,6 @@ jobs:
             bucketurl="$(echo "http://$bucket.s3-website-us-west-2.amazonaws.com")"
             curl -H "Content-Type: text/plain" -H "token: 50ff33d6-1f33-4917-9dff-ca0f975d83db" --request PUT --data "$bucketurl" https://api.memstash.io/values/bucketurl
       - destroy-environment
-          
        
                     
   deploy-backend:
@@ -362,37 +378,23 @@ jobs:
     docker:
       - image: circleci/node:13.8.0 
     steps:
-      - checkout
+      # Checkout code from git
       - run:
           name: Install dependencies
           command: |
-            sudo apt-get update
-            sudo apt-get upgrade
-            sudo apt-get -y install less curl
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
+            # your code here
+      - run:
+          name: Get backend url
+          command: |
+            # your code here
       - run:
           name: Backend smoke test.
           command: |
-            echo "RUNNING A BACKEND SMOKE TEST"
-            BACKEND_URL="http://$(curl -H "token: c1b1e3ca-9ad3-4e51-a6ba-8693a7450b4e" --request GET \
-              https://api.memstash.io/values/backendip_${CIRCLE_WORKFLOW_ID:0:7} | head -1):3030"
-            curl "$BACKEND_URL/api/status"
+            # your code here
       - run:
           name: Frontend smoke test.
           command: |
-            echo "RUNNING A FRONTEND SMOKE TEST"
-            export bucketurl=$(curl -H "token: c1b1e3ca-9ad3-4e51-a6ba-8693a7450b4e" --request GET https://api.memstash.io/values/bucketurl)
-            if curl -s ${bucketurl} | grep "Welcome"
-            then
-              echo "FRONTEND SMOKE TEST SUCCESS"
-            else
-              echo "FRONTEND SMOKE TEST FAIL"
-              exit 1
-            fi
-      - destroy-environment
-      - revert-migrations
+            # your code here
       # Here's where you will add some code to rollback on failure  
 
   cloudfront-update:
