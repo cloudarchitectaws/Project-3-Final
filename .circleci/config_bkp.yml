@@ -201,31 +201,28 @@ jobs:
      
   configure-infrastructure:
     docker:
-      - image: python:3.7-alpine3.11
-
+      - image: python:3.7-alpine3.12
+    executor: aws-cli/default  
     steps:
-      - checkout  
-      - run:
-          name: Install ssh and git
-          command: |
-            apk add --update openssh-client #Insatll ssh
-            apk add --update git #Insatll git
+      - checkout
       - add_ssh_keys:
-          fingerprints: ["11:f8:00:99:22:99:cb:d0:94:80:a0:1a:1f:55:17:19"]
+          fingerprints:
+            - 11:f8:00:99:22:99:cb:d0:94:80:a0:1a:1f:55:17:19
       - attach_workspace:
           at: ~/
       - run:
           name: Install dependencies
-  # working_directory: ./.circleci/ansible
+          working_directory: ./.circleci/ansible
           command: |
-            cat ~/project/.circleci/ansible/inventory.txt
-            apk add --update tar gzip ansible nodejs npm curl
-            pip install awscli
+            apk add --update ansible
       - run:
-          name: configure environment
+          name: Configure server
           command: |
+            echo PWD $(pwd)
+            echo $TYPEORM_HOST
+            touch ~/project/backend/.env
             echo ENVIRONMENT=production >> "backend/.env"
-            #echo NODE_ENV=production >> "backend/.env"
+            echo NODE_ENV=production >> "backend/.env"
             echo TYPEORM_CONNECTION=postgres >> "backend/.env"
             echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> "backend/.env"
             echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> "backend/.env"
@@ -235,18 +232,13 @@ jobs:
             echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "backend/.env"
             echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "backend/.env"
             echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"
-            #echo ~/project/backend/.env
-            cat backend/.env
-            #cd ~/project/.circleci/ansible
-            #cat ~/project/.circleci/ansible/inventory.txt
-      - run:
-          name: configure server
-          command: |
+            echo ~/project/backend/.env
+            cd ~/project/.circleci/ansible
             export ANSIBLE_HOST_KEY_CHECKING=False
-            ansible-playbook -i ~/project/.circleci/ansible/inventory.txt .circleci/ansible/configure-server.yml
+            cat inventory.txt
+            ansible-playbook -i inventory.txt configure-server.yml
             pwd
             cat ~/project/backend/.env
-          no_output_timeout: 30m
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
   
