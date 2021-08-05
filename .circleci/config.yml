@@ -471,7 +471,7 @@ jobs:
               aws cloudformation delete-stack --stack-name udapeople-frontend-$originalWorkflowID
               aws cloudformation delete-stack --stack-name udapeople-backend-$originalWorkflowID
             else
-              echo "No old workflow exists"
+              echo "No old workflow existss"
             fi 
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
