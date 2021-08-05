@@ -279,6 +279,7 @@ jobs:
             echo 'DUMP MIGRATIONS'
             echo "PWD: " $(pwd)
             echo "HOST: " $TYPEORM_HOST
+            npm run migrations:revert
             npm run migrations >> /home/circleci/project/backend/migrations_dump.txt
             echo 'DISPLAY CONTENTS'
             echo '*****************'
