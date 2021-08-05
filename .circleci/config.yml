@@ -158,7 +158,7 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml --region=ap-south-1 \
-              --tags ramProject3=back-end \
+              --tags Project=back-end \
               --stack-name "back-end-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" 
           no_output_timeout: 30m 
@@ -180,7 +180,7 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/frontend.yml --region=ap-south-1 \
-              --tags ramProject3=front-end \
+              --tags Project=front-end \
               --stack-name "front-end-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  
           no_output_timeout: 30m
