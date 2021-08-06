@@ -469,35 +469,29 @@ jobs:
     docker:
       - image: amazon/aws-cli
     steps:
-      - checkout
+      # Checkout code from git
       - run:
-          name: Install dependencies
+          name: Get old stack workflow id and delete the old s3 bucket and stacks 
           command: |
-            yum -y install tar 
-            yum -y install gzip
-      - attach_workspace:
-          at: .circleci/ansible/
-      - run:
-          name: Get Old Stack Workflow ID and Remove old stacks and files
-          command: |
-            originalWorkflowID=`cat ./.circleci/ansible/originalWorkflowID.txt`
-            echo $originalWorkflowID
-            if [ -n "$originalWorkflowID" ]
+            export OldWorkflowID=$(curl -H "token: ${CIRCLE_WORKFLOW_ID:0:7}" --request GET https://api.memstash.io/values/workflow_id)
+            echo "Privious_workflow_id is ${OldWorkflowID}"
+            export STACKS=$(aws cloudformation list-stacks --query "StackSummaries[*].StackName" --stack-status-filter CREATE_COMPLETE --output text)
+            echo " All Stacks are ${STACKS}"
+            # deleting the old s3 bucket and stacks
+            if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
             then
-              aws s3 rm s3://udapeople-$originalWorkflowID --recursive
-              aws s3 rb s3://udapeople-$originalWorkflowID --force
-              aws cloudformation delete-stack --stack-name udapeople-frontend-$originalWorkflowID
-              aws cloudformation delete-stack --stack-name udapeople-backend-$originalWorkflowID
+              echo "starting operations for OldWorkflowID=${OldWorkflowID}"
+              aws s3 rm s3://udapeople-${OldWorkflowID} --recursive
+              aws cloudformation delete-stack --stack-name front-end-${OldWorkflowID}
+              aws cloudformation delete-stack --stack-name back-end-${OldWorkflowID}
             else
-              echo "No old workflow existss"
-            fi 
+              echo "No stack deleted"
+              exit 1
+            fi
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert-migrations
-      - slack/notify:
-          event: fail
-          channel: C02AKKVMW5P
-          template: basic_fail_1
+      
 
 
 workflows:
