@@ -463,7 +463,7 @@ jobs:
             --stack-name $StackName \
             --template-body file://./.circleci/files/cloudfront.yml \
             --parameter ParameterKey=WorkflowID,ParameterValue=${CIRCLE_WORKFLOW_ID:0:7} \
-            --tags Key=Name,Value=Udapeople-production-${CIRCLE_WORKFLOW_ID:0:7}
+            --tags Key=Name,Value=udapeople-${CIRCLE_WORKFLOW_ID:0:7}
       - persist_to_workspace:
           root: .circleci/ansible/
           paths:
