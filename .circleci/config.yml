@@ -199,7 +199,11 @@ jobs:
           paths:
             - project/.circleci/ansible/inventory.txt
       - destroy-environment:
-          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}        
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7} 
+      - slack/notify:
+          event: fail
+          channel: C02AKKVMW5P
+          template: basic_fail_1       
      
   configure-infrastructure:
     docker:
@@ -251,6 +255,10 @@ jobs:
           no_output_timeout: 30m
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+      - slack/notify:
+          event: fail
+          channel: C02AKKVMW5P
+          template: basic_fail_1    
   
   run-migrations:
     docker:
@@ -304,6 +312,10 @@ jobs:
       - destroy-environment:
             workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert-migrations
+      - slack/notify:
+          event: fail
+          channel: C02AKKVMW5P
+          template: basic_fail_1
 
   deploy-frontend:
     docker:
@@ -332,6 +344,10 @@ jobs:
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert-migrations
+      - slack/notify:
+          event: fail
+          channel: C02AKKVMW5P
+          template: basic_fail_1
 
   deploy-backend:
     docker:
@@ -369,6 +385,10 @@ jobs:
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert-migrations
+      - slack/notify:
+          event: fail
+          channel: C02AKKVMW5P
+          template: basic_fail_1
 
   smoke-test:
     docker:
@@ -392,18 +412,22 @@ jobs:
       - run:
           name: Frontend smoke test.
           command: |
-            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-ap-south-1.amazonaws.com"
-            curl ${URL}
-            echo ${URL}
-            if curl -s ${URL} | grep "Welcome"
-            then
-              echo "Frontend alive"
-            else
-              exit 1
-            fi
+             URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com"
+             echo Frontend_URL: ${URL}
+             #if curl -s ${URL} | grep "Welcome"; then  echo "frontend smoke test passed"; else  echo "frontend smoke test failed"; fi
+             if curl -s ${URL} | grep "Welcome"
+             then
+               return 0
+             else
+               return 1
+             fi
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert-migrations
+      - slack/notify:
+          event: fail
+          channel: C02AKKVMW5P
+          template: basic_fail_1
 
   cloudfront-update:
     docker:
@@ -450,6 +474,10 @@ jobs:
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert-migrations
+      - slack/notify:
+          event: fail
+          channel: C02AKKVMW5P
+          template: basic_fail_1
 
   cleanup:
     docker:
@@ -480,6 +508,10 @@ jobs:
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert-migrations
+      - slack/notify:
+          event: fail
+          channel: C02AKKVMW5P
+          template: basic_fail_1
 
 
 workflows:
