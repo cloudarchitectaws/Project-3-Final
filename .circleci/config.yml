@@ -427,50 +427,42 @@ jobs:
       
 
   cloudfront-update:
+    cloudfront-update:
     docker:
-      - image: amazon/aws-cli
+       - image: amazon/aws-cli
+      # Docker image here that supports AWS CLI
     steps:
       - checkout
       - run:
           name: Install dependencies
           command: |
-            yum -y install tar 
-            yum -y install gzip
+            yum install -y curl tar gzip
       - run:
-          name: Update cloudfront stack
+          name: store workflow ID befor updating cloudfront 
           command: |
-            aws cloudformation list-exports \
-            --query "Exports[?Name=='WorkflowID'].Value" \
-            --no-paginate \
-            --output text > ./.circleci/ansible/originalWorkflowID.txt
-            if [ -s "./.circleci/ansible/originalWorkflowID.txt" ]
+            OldWorkflowId=$(aws cloudformation list-exports --query "Exports[?Name=='WorkflowID'].Value" --no-paginate --output text)
+            echo "Old workflow ID  is ${OldWorkflowId}"
+            if [ ! -z $OldWorkflowId ]
             then
-              cat ./.circleci/ansible/originalWorkflowID.txt
-              originalWorkflowID=`cat ./.circleci/ansible/originalWorkflowID.txt`
+              curl -H "Content-Type: text/plain" -H "token: ${CIRCLE_WORKFLOW_ID:0:7}" --request PUT --data ${OldWorkflowId} https://api.memstash.io/values/workflow_id
             else
-              echo "New stack will be created"
-            fi
-            if [ -n "$originalWorkflowID" ]
-            then
-              echo $originalWorkflowID
-              StackOption=update-stack
-              StackName="cloudfront"
-            else
-              StackOption=create-stack
-              StackName=udapeople-${CIRCLE_WORKFLOW_ID:0:7}
-            fi
-            aws cloudformation $StackOption \
-            --stack-name $StackName \
-            --template-body file://./.circleci/files/cloudfront.yml \
-            --parameter ParameterKey=WorkflowID,ParameterValue=${CIRCLE_WORKFLOW_ID:0:7} \
-            --tags Key=Name,Value=udapeople-${CIRCLE_WORKFLOW_ID:0:7}
-      - persist_to_workspace:
-          root: .circleci/ansible/
-          paths:
-            - originalWorkflowID.txt
-      - destroy-environment:
-          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+              echo "No WorkflowID found"
+              return 1
+            fi           
+      - run:
+          name: Update cloudfront distribution
+          command: |
+            aws cloudformation deploy \
+              --stack-name udapeople-cloudfront \
+              --template-file .circleci/files/cloudfront.yml \
+              --region ap-south-1 \
+              --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
+              --tags project=Udapeople
+              
       - revert-migrations
+      - destroy-environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}    
+      # Here's where you will add some code to rollback on failure
       
 
   cleanup:
