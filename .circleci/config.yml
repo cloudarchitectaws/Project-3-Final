@@ -49,10 +49,7 @@ jobs:
       - save_cache:
           paths: [frontend/node_modules]
           key: frontend-build
-      - slack/notify:
-          event: fail
-          channel: C02AKKVMW5P
-          template: basic_fail_1
+      - slack/status
 
   build-backend:
     docker:
@@ -88,10 +85,7 @@ jobs:
             cd frontend
             npm i
             npm run test
-      - slack/notify:
-          event: fail
-          channel: C02AKKVMW5P
-          template: basic_fail_1
+      - slack/status
                 
   test-backend:
     docker:
@@ -106,10 +100,7 @@ jobs:
              cd backend
              npm i
              npm run test
-      - slack/notify:
-          event: fail
-          channel: C02AKKVMW5P
-          template: basic_fail_1
+      - slack/status
              
   scan-frontend:
     docker:
@@ -124,10 +115,7 @@ jobs:
             cd frontend
             npm i
             npm audit fix --audit-level=critical --force
-      - slack/notify:
-          event: fail
-          channel: C02AKKVMW5P
-          template: basic_fail_1
+      - slack/status
 
   scan-backend:
     docker:
@@ -142,10 +130,7 @@ jobs:
              cd backend
              npm i
              npm audit fix --audit-level=critical --force
-      - slack/notify:
-          event: fail
-          channel: C02AKKVMW5P
-          template: basic_fail_1
+      - slack/status
           
   deploy-infrastructure:
     docker:
@@ -200,10 +185,7 @@ jobs:
             - project/.circleci/ansible/inventory.txt
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7} 
-      - slack/notify:
-          event: fail
-          channel: C02AKKVMW5P
-          template: basic_fail_1       
+      - slack/status    
      
   configure-infrastructure:
     docker:
@@ -255,10 +237,7 @@ jobs:
           no_output_timeout: 30m
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
-      - slack/notify:
-          event: fail
-          channel: C02AKKVMW5P
-          template: basic_fail_1    
+      - slack/status  
   
   run-migrations:
     docker:
@@ -312,10 +291,7 @@ jobs:
       - destroy-environment:
             workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert-migrations
-      - slack/notify:
-          event: fail
-          channel: C02AKKVMW5P
-          template: basic_fail_1
+      - slack/status
 
   deploy-frontend:
     docker:
@@ -344,11 +320,7 @@ jobs:
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert-migrations
-      - slack/notify:
-          event: fail
-          channel: C02AKKVMW5P
-          template: basic_fail_1
-
+      - slack/status
   deploy-backend:
     docker:
       - image: python:3.7-alpine3.12
@@ -385,10 +357,7 @@ jobs:
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert-migrations
-      - slack/notify:
-          event: fail
-          channel: C02AKKVMW5P
-          template: basic_fail_1
+      - slack/status
 
   smoke-test:
     docker:
