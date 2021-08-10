@@ -129,6 +129,8 @@ jobs:
             cd frontend
             npm i
             npm audit --audit-level=critical
+      - store_artifacts:
+          path: /tmp/bkp       
                 
   scan-backend:
     docker:
