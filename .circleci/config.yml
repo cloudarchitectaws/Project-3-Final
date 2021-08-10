@@ -362,15 +362,16 @@ jobs:
           command: |
             tar -C backend -czvf artifact.tar.gz .
             ls -la
+      
       - run:
           name: Deploy Backend
-          no_output_timeout: 30m
           command: |
-            ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i .circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml
+            npm install webpack-dev-server -g
+            ANSIBLE_HOST_KEY_CHECKING=False 
+            ansible-playbook -i .circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml
+          no_output_timeout: 30m
       
-      #- revert-migrations
-     # - destroy-environment
-
+      
   smoke-test:
     docker: 
       - image: python:3.7-alpine3.11
