@@ -128,7 +128,7 @@ jobs:
           command: |
             cd frontend
             npm i
-            npm audit --audit-level=critical
+            npm audit --audit-level=critical --force
       - store_artifacts:
           path: /tmp/bkp       
                 
